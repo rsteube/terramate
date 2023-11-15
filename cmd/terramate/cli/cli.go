@@ -626,22 +626,16 @@ func (c *cli) setupGit() {
 		return
 	}
 
-	remoteCheckFailed := false
-
 	if err := c.prj.checkDefaultRemote(); err != nil {
 		if c.prj.git.remoteConfigured {
 			fatal(err, "checking git default remote")
-		} else {
-			remoteCheckFailed = true
 		}
 	}
 
 	if c.parsedArgs.GitChangeBase != "" {
-		c.prj.baseRef = c.parsedArgs.GitChangeBase
-	} else if remoteCheckFailed {
-		c.prj.baseRef = c.prj.defaultLocalBaseRef()
+		c.prj.baseRev = c.parsedArgs.GitChangeBase
 	} else {
-		c.prj.baseRef = c.prj.defaultBaseRef()
+		c.prj.baseRev = c.prj.selectChangeBase()
 	}
 }
 
@@ -762,7 +756,7 @@ func (c *cli) triggerStackByFilter() {
 		fatal(errors.E("trigger command expects either a stack path or the --experimental-status flag"))
 	}
 
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 	status := parseStatusFilter(c.parsedArgs.Experimental.Trigger.ExperimentalStatus)
 	stacksReport, err := c.listStacks(mgr, false, status)
 	if err != nil {
@@ -1321,7 +1315,7 @@ func (c *cli) printStacks() {
 		c.fatal("Invalid args", errors.E("the --why flag must be used together with --changed"))
 	}
 
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 
 	status := parseStatusFilter(c.parsedArgs.List.ExperimentalStatus)
 	report, err := c.listStacks(mgr, c.parsedArgs.Changed, status)
@@ -1361,7 +1355,7 @@ func parseStatusFilter(strStatus string) cloudstack.FilterStatus {
 }
 
 func (c *cli) printRuntimeEnv() {
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 	report, err := c.listStacks(mgr, c.parsedArgs.Changed, cloudstack.NoFilter)
 	if err != nil {
 		fatal(err, "listing stacks")
@@ -1589,7 +1583,7 @@ func (c *cli) generateDebug() {
 }
 
 func (c *cli) printStacksGlobals() {
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 	report, err := c.listStacks(mgr, c.parsedArgs.Changed, cloudstack.NoFilter)
 	if err != nil {
 		fatal(err, "listing stacks globals: listing stacks")
@@ -1623,7 +1617,7 @@ func (c *cli) printMetadata() {
 		Str("action", "cli.printMetadata()").
 		Logger()
 
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 	report, err := c.listStacks(mgr, c.parsedArgs.Changed, cloudstack.NoFilter)
 	if err != nil {
 		fatal(err, "loading metadata: listing stacks")
@@ -1687,7 +1681,7 @@ func (c *cli) checkGenCode() bool {
 }
 
 func (c *cli) ensureStackID() {
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 	report, err := c.listStacks(mgr, false, cloudstack.NoFilter)
 	if err != nil {
 		fatal(err, "listing stacks")
@@ -1938,7 +1932,7 @@ func (c *cli) friendlyFmtDir(dir string) (string, bool) {
 }
 
 func (c *cli) computeSelectedStacks(ensureCleanRepo bool) (config.List[*config.SortableStack], error) {
-	mgr := stack.NewManager(c.cfg(), c.prj.baseRef)
+	mgr := stack.NewManager(c.cfg(), c.prj.baseRev)
 
 	report, err := c.listStacks(mgr, c.parsedArgs.Changed, cloudstack.NoFilter)
 	if err != nil {
