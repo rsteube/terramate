@@ -14,13 +14,18 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/terramate-io/terramate/config"
 	"github.com/terramate-io/terramate/errors"
+	"github.com/terramate-io/terramate/printer"
 	"github.com/terramate-io/terramate/run/dag"
 )
 
 // Sort computes the final execution order for the given list of stacks.
 // In the case of multiple possible orders, it returns the lexicographic sorted
 // path.
-func Sort(root *config.Root, stacks config.List[*config.SortableStack]) (config.List[*config.SortableStack], string, error) {
+func Sort(
+	root *config.Root,
+	stacks config.List[*config.SortableStack],
+	printer *printer.Printer,
+) (config.List[*config.SortableStack], string, error) {
 	d := dag.New()
 
 	logger := log.With().
@@ -66,6 +71,7 @@ func Sort(root *config.Root, stacks config.List[*config.SortableStack]) (config.
 			"after",
 			func(s config.Stack) []string { return s.After },
 			visited,
+			printer,
 		)
 
 		if err != nil {
@@ -121,6 +127,7 @@ func BuildDAG(
 	ancestorsName string,
 	getAncestors func(config.Stack) []string,
 	visited dag.Visited,
+	printer *printer.Printer,
 ) error {
 	logger := log.With().
 		Str("action", "run.BuildDAG()").
@@ -162,13 +169,15 @@ func BuildDAG(
 			}
 			st, err := os.Stat(abspath)
 			if err != nil {
-				log.Warn().
-					Err(err).
-					Msgf("building dag: failed to stat %s path %s - ignoring", fieldname, abspath)
+				printer.WarnWithDetailsln(
+					fmt.Sprintf("Stack references invalid path in '%s' attribute", fieldname),
+					err,
+				)
 			} else if !st.IsDir() {
-				log.Warn().
-					Msgf("building dag: stack.%s path %s is not a directory - ignoring",
-						fieldname, pathstr)
+				printer.WarnWithDetailsln(
+					fmt.Sprintf("Stack references invalid path in '%s' attribute", fieldname),
+					errors.E("Path %s is not a directory", pathstr),
+				)
 			} else {
 				uniqPaths[pathstr] = struct{}{}
 			}
@@ -225,7 +234,7 @@ func BuildDAG(
 		}
 
 		err = BuildDAG(d, root, elem.Stack, descendantsName, getDescendants,
-			ancestorsName, getAncestors, visited)
+			ancestorsName, getAncestors, visited, printer)
 		if err != nil {
 			return errors.E(err, "stack %q: failed to build DAG", elem)
 		}
