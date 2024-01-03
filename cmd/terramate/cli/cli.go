@@ -34,6 +34,7 @@ import (
 	"github.com/terramate-io/terramate/hcl/fmt"
 	"github.com/terramate-io/terramate/hcl/info"
 	"github.com/terramate-io/terramate/modvendor/download"
+	"github.com/terramate-io/terramate/printer"
 	"github.com/terramate-io/terramate/versions"
 
 	"github.com/terramate-io/terramate/stack/trigger"
@@ -259,31 +260,46 @@ func Exec(
 ) {
 	configureLogging(defaultLogLevel, defaultLogFmt, defaultLogDest,
 		stdout, stderr)
-	c := newCLI(version, args, stdin, stdout, stderr)
+	c := newCLI(
+		version,
+		args,
+		stdin,
+		stdout,
+		stderr,
+		printer.NewPrinter(stdout),
+		printer.NewPrinter(stderr),
+	)
 	c.run()
 }
 
 type cli struct {
-	version    string
-	ctx        *kong.Context
-	parsedArgs *cliSpec
-	clicfg     cliconfig.Config
-	stdin      io.Reader
-	stdout     io.Writer
-	stderr     io.Writer
-	output     out.O
-	exit       bool
-	prj        project
-	httpClient http.Client
-	cloud      cloudConfig
-	uimode     UIMode
+	version       string
+	ctx           *kong.Context
+	parsedArgs    *cliSpec
+	clicfg        cliconfig.Config
+	stdin         io.Reader
+	stdout        io.Writer
+	stderr        io.Writer
+	stdoutPrinter *printer.Printer
+	stderrPrinter *printer.Printer
+	output        out.O // Deprecated: use stdoutPrinter/stderrPrinter
+	exit          bool
+	prj           project
+	httpClient    http.Client
+	cloud         cloudConfig
+	uimode        UIMode
 
 	checkpointResults chan *checkpoint.CheckResponse
 
 	tags filter.TagClause
 }
 
-func newCLI(version string, args []string, stdin io.Reader, stdout, stderr io.Writer) *cli {
+func newCLI(
+	version string,
+	args []string,
+	stdin io.Reader,
+	stdout, stderr io.Writer,
+	stdoutPrinter, stderrPrinter *printer.Printer) *cli {
 	if len(args) == 0 {
 		// WHY: avoid default kong error, print help
 		args = []string{"--help"}
@@ -508,16 +524,18 @@ Please see https://terramate.io/docs/cli/configuration/project-setup for details
 	}
 
 	return &cli{
-		version:    version,
-		stdin:      stdin,
-		stdout:     stdout,
-		stderr:     stderr,
-		output:     output,
-		parsedArgs: &parsedArgs,
-		clicfg:     clicfg,
-		ctx:        ctx,
-		prj:        prj,
-		uimode:     uimode,
+		version:       version,
+		stdin:         stdin,
+		stdout:        stdout,
+		stderr:        stderr,
+		stdoutPrinter: stdoutPrinter,
+		stderrPrinter: stderrPrinter,
+		output:        output,
+		parsedArgs:    &parsedArgs,
+		clicfg:        clicfg,
+		ctx:           ctx,
+		prj:           prj,
+		uimode:        uimode,
 
 		// in order to reduce the number of TCP/SSL handshakes we reuse the same
 		// http.Client in all requests, for most hosts.
@@ -1415,6 +1433,7 @@ func (c *cli) generateGraph() {
 			"after",
 			func(s config.Stack) []string { return s.After },
 			visited,
+			c.stderrPrinter,
 		); err != nil {
 			fatal(err, "building order tree")
 		}
@@ -1514,7 +1533,7 @@ func (c *cli) printRunOrder() {
 	}
 
 	logger.Debug().Msg("Get run order.")
-	orderedStacks, reason, err := run.Sort(c.cfg(), stacks)
+	orderedStacks, reason, err := run.Sort(c.cfg(), stacks, c.stderrPrinter)
 	if err != nil {
 		if errors.IsKind(err, dag.ErrCycleDetected) {
 			fatal(err, "cycle detected on run order: %s", reason)
@@ -1724,26 +1743,26 @@ func (c *cli) partialEval() {
 	}
 }
 
-func (c *cli) evalRunArgs(st *config.Stack, cmd []string) []string {
+func (c *cli) evalRunArgs(st *config.Stack, cmd []string) ([]string, error) {
 	ctx := c.setupEvalContext(st, map[string]string{})
 	var newargs []string
 	for _, arg := range cmd {
 		exprStr := `"` + arg + `"`
 		expr, err := ast.ParseExpression(exprStr, "<cmd arg>")
 		if err != nil {
-			fatal(err, "parsing %s", exprStr)
+			return nil, errors.E(err, "parsing %s", exprStr)
 		}
 		val, err := ctx.Eval(expr)
 		if err != nil {
-			fatal(err, "eval %q", exprStr)
+			return nil, errors.E(err, "eval %q", exprStr)
 		}
 		if !val.Type().Equals(cty.String) {
-			fatal(errors.E("cmd line evaluates to type %s but only string is permitted", val.Type().FriendlyName()))
+			return nil, errors.E("cmd line evaluates to type %s but only string is permitted", val.Type().FriendlyName())
 		}
 
 		newargs = append(newargs, val.AsString())
 	}
-	return newargs
+	return newargs, nil
 }
 
 func (c *cli) getConfigValue() {
@@ -1940,7 +1959,7 @@ func (c *cli) computeSelectedStacks(ensureCleanRepo bool) (config.List[*config.S
 		stacks[i] = e.Stack.Sortable()
 	}
 
-	stacks, err = mgr.AddWantedOf(stacks)
+	stacks, err = mgr.AddWantedOf(stacks, c.stderrPrinter)
 	if err != nil {
 		return nil, errors.E(err, "adding wanted stacks")
 	}
@@ -2201,6 +2220,12 @@ func configureLogging(logLevel, logFmt, logdest string, stdout, stderr io.Writer
 	}
 }
 
+// Deprecated: use c.fatal
 func fatal(err error, args ...any) {
 	errlog.Fatal(log.Logger, err, args...)
+}
+
+func (c *cli) fatal(title string, err error) {
+	c.stderrPrinter.ErrorWithDetailsln(title, err)
+	os.Exit(1)
 }

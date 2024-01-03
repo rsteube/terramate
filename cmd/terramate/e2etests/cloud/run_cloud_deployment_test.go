@@ -151,8 +151,9 @@ func TestCLIRunWithCloudSyncDeployment(t *testing.T) {
 			cmd:      []string{HelperPathAsHCL, "echo", "${terramate.stack.path.absolute}"},
 			want: want{
 				run: RunExpected{
-					Status: 0,
-					Stdout: "/stack\n",
+					IgnoreStderr: true,
+					Status:       0,
+					Stdout:       "/stack\n",
 				},
 				events: eventsResponse{
 					"stack": []string{"pending", "running", "ok"},
@@ -205,8 +206,9 @@ func TestCLIRunWithCloudSyncDeployment(t *testing.T) {
 			},
 			want: want{
 				run: RunExpected{
-					Status: 0,
-					Stdout: "/stack\n",
+					Status:       0,
+					Stdout:       "/stack\n",
+					IgnoreStderr: true,
 				},
 				events: eventsResponse{
 					"stack": []string{"pending", "running", "ok"},
@@ -259,8 +261,9 @@ func TestCLIRunWithCloudSyncDeployment(t *testing.T) {
 			},
 			want: want{
 				run: RunExpected{
-					Status: 0,
-					Stdout: "/stack\n",
+					Status:       0,
+					Stdout:       "/stack\n",
+					IgnoreStderr: true,
 				},
 				events: eventsResponse{
 					"stack": []string{"pending", "running", "ok"},
@@ -278,8 +281,9 @@ func TestCLIRunWithCloudSyncDeployment(t *testing.T) {
 			cmd:        []string{HelperPathAsHCL, "echo", "${terramate.stack.path.absolute}"},
 			want: want{
 				run: RunExpected{
-					Status: 0,
-					Stdout: "/parent/child\n",
+					IgnoreStderr: true,
+					Status:       0,
+					Stdout:       "/parent/child\n",
 				},
 				events: eventsResponse{
 					"parent/child": []string{"pending", "running", "ok"},
@@ -297,8 +301,9 @@ func TestCLIRunWithCloudSyncDeployment(t *testing.T) {
 
 			want: want{
 				run: RunExpected{
-					Status: 0,
-					Stdout: "/s1\n/s2\n",
+					IgnoreStderr: true,
+					Status:       0,
+					Stdout:       "/s1\n/s2\n",
 				},
 				events: eventsResponse{
 					"s1": []string{"pending", "running", "ok"},
