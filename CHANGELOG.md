@@ -34,6 +34,10 @@ Given a version number `MAJOR.MINOR.PATCH`, we increment the:
 - (**BREAKING CHANGE**) Fix the execution order when using `tag:` filter in `after/before` in conjunction with implicit filesystem order. Please check the `terramate list --run-order` after
 upgrading.
 
+### Refactor
+
+- (**BREAKING CHANGE**) Removes the option `terramate.config.git.default_branch_base_ref`.
+
 ## 0.4.5
 
 ### Added

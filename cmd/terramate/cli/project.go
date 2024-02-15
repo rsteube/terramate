@@ -64,21 +64,6 @@ func (p *project) prettyRepo() string {
 	return p.normalizedRepo
 }
 
-func (p *project) localDefaultBranchCommit() string {
-	if p.git.localDefaultBranchCommit != "" {
-		return p.git.localDefaultBranchCommit
-	}
-	gitcfg := p.gitcfg()
-	refName := gitcfg.DefaultRemote + "/" + gitcfg.DefaultBranch
-	val, err := p.git.wrapper.RevParse(refName)
-	if err != nil {
-		fatal("unable to git rev-parse", err)
-	}
-
-	p.git.localDefaultBranchCommit = val
-	return val
-}
-
 func (p *project) isGitFeaturesEnabled() bool {
 	return p.isRepo && p.hasCommit()
 }
@@ -126,44 +111,14 @@ func (p *project) remoteDefaultCommit() string {
 	return p.git.remoteDefaultBranchCommit
 }
 
-func (p *project) isDefaultBranch() bool {
-	git := p.gitcfg()
-	branch, err := p.git.wrapper.CurrentBranch()
-	if err != nil {
-		// WHY?
-		// The current branch name (the symbolic-ref of the HEAD) is not always
-		// available, in this case we naively check if HEAD == local origin/main.
-		// This case usually happens in the git setup of CIs.
-		return p.localDefaultBranchCommit() == p.headCommit()
-	}
-
-	return branch == git.DefaultBranch
-}
-
 // defaultBaseRef returns the baseRef for the current git environment.
 func (p *project) defaultBaseRef() string {
-	git := p.gitcfg()
-	if p.isDefaultBranch() &&
-		p.remoteDefaultCommit() == p.headCommit() {
-		_, err := p.git.wrapper.RevParse(git.DefaultBranchBaseRef)
-		if err == nil {
-			return git.DefaultBranchBaseRef
-		}
-	}
-
 	return p.defaultBranchRef()
 }
 
 // defaultLocalBaseRef returns the baseRef in case there's no remote setup.
 func (p *project) defaultLocalBaseRef() string {
 	git := p.gitcfg()
-	if p.isDefaultBranch() {
-		_, err := p.git.wrapper.RevParse(git.DefaultBranchBaseRef)
-		if err == nil {
-			return git.DefaultBranchBaseRef
-		}
-	}
-
 	return git.DefaultBranch
 }
 
@@ -200,11 +155,6 @@ func (p *project) setDefaults() error {
 	}
 
 	gitOpt := cfg.Terramate.Config.Git
-
-	p.git.baseRefConfigured = gitOpt.DefaultBranchBaseRef != ""
-	if !p.git.baseRefConfigured {
-		gitOpt.DefaultBranchBaseRef = defaultBranchBaseRef
-	}
 
 	p.git.branchConfigured = gitOpt.DefaultBranch != ""
 	if !p.git.branchConfigured {
