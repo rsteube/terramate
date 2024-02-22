@@ -115,78 +115,86 @@ export default defineConfig({
           text: '👋 Terramate Cloud',
           collapsed: false,
           items: [
-            { text: 'Introduction', link: '' },
-            { text: 'Frequently Asked Questions', link: '' },
-            { text: 'Data Safety & Security', link: '' },
-            { text: 'Product Updates ', link: '' },
-            { text: 'Roadmap', link: '' },
+            { text: 'Introduction', link: '/cloud/introduction/' },
+            // { text: 'Frequently Asked Questions', link: '/cloud/faq/' },
+            // { text: 'Data Safety & Security', link: '/cloud/security/' },
+            // { text: 'Product Updates ', link: '' },
+            // { text: 'Roadmap', link: '' },
           ],
         },
         {
           text: '🏃🏽‍♂️ Getting Started',
-          collapsed: false,
-          items: [
-            { text: 'Create an account', link: '/cli/introduction' },
-            { text: 'Create an account', link: '/cli/introduction' },
-          ],
+          link: '/cloud/getting-started/',
         },
         {
           text: '📊 Product Features',
           items: [
-          {
-            text: 'Dashboard',
-            collapsed: false,
-            items: [
-              { text: 'Introduction', link: '/cli/introduction' },
-            ],
-          },
-          {
-            text: 'Deployments',
-            collapsed: false,
-            items: [
+            {
+              text: 'Dashboard',
+              link: '/cloud/dashboard/',
+            },
+            {
+              text: 'Stacks',
+              link: '/cloud/stacks/',
+              collapsed: true,
+              items: [
+                { text: 'Stacks List', link: '/cloud/stacks/list' },
+                { text: 'Stack Details', link: '/cloud/stacks/details' },
+                { text: 'Stack Status', link: '/cloud/stacks/status' },
+                { text: 'Synchronize Stacks', link: '/cloud/stacks/sync' },
+              ],
+            },
+            {
+              text: 'Deployments',
+              link: '/cloud/deployments/',
+              collapsed: false,
+              items: [
+                { text: 'Synchronize Deployments', link: '/cloud/deployments/sync' },
+              ],
+            },
+            {
+              text: 'Drift Management',
+              collapsed: false,
+              items: [
               // { text: 'Introduction', link: '/cli/introduction' },
-            ],
-          },
-          {
-            text: 'Stacks',
-            collapsed: false,
-            items: [
-              // { text: 'Introduction', link: '/cli/introduction' },
-            ],
-          },
-          {
-            text: 'Drift Management',
-            collapsed: false,
-            items: [
-              // { text: 'Introduction', link: '/cli/introduction' },
-            ],
-          },
-          {
-            text: 'Notifications',
-            collapsed: false,
-            items: [
-              // { text: 'Introduction', link: '/cli/introduction' },
-            ],
-          },
-              // { text: 'Introduction', link: '/cli/introduction' },
+              ],
+            },
+            // {
+            //   text: 'Notifications',
+            //   collapsed: false,
+            //   items: [
+            //   // { text: 'Introduction', link: '/cli/introduction' },
+            //   ],
+            // },
+            // { text: 'Introduction', link: '/cli/introduction' },
           ],
         },
         {
           text: '🏠 Organization',
+          link: '/cloud/organization/',
           collapsed: false,
           items: [
-            { text: 'Settings', link: '/cloud/organization/' },
-            { text: 'User Management', link: '/cli/introduction' },
-            { text: 'General Settings', link: '/cli/introduction' },
+            { text: 'General Settings', link: '/cloud/organization/settings' },
+            { text: 'User Management', link: '/cloud/organization/user-management' },
           ],
         },
-        {
-          text: '👟 Profile',
-          collapsed: false,
-          items: [
-            // { text: 'Introduction', link: '/cli/introduction' },
-          ],
-        },
+        // {
+        //   text: '👟 Profile',
+        //   collapsed: false,
+        //   items: [
+        //     // { text: 'Introduction', link: '/cli/introduction' },
+        //   ],
+        // },
+        // {
+        //   text: '🏠 Integrations',
+        //   collapsed: false,
+        //   items: [
+        //     { text: 'Slack', link: '/cloud/integrations/slack/' },
+        //     { text: 'GitHub Actions', link: '/cloud/integrations/github-actions/' },
+        //     { text: 'Gitlab CI/CD', link: '/cloud/integrations/gitlab-cicd/' },
+        //     { text: 'BitBucket Pipelines', link: '/cloud/integrations/bitbucket-pipelines/' },
+        //   ],
+        // },
       ],
       // This sidebar gets displayed when a user
       // is on `cli` directory.
@@ -789,15 +797,16 @@ export default defineConfig({
             },
           ],
         },
-        // {
-        //   text: '🤓 Run Terramate in CI/CD',
-        //   collapsed: false,
-        //   items: [
-        //     { text: 'GitHub Actions', link: '/cli/automation/github-actions' },
-        //     { text: 'GitLab CI/CD', link: '/cli/automation/gitlab' },
-        //     { text: 'BitBucket Pipelines', link: '/cli/automation/bitbucket' },
-        //   ],
-        // },
+        {
+          text: '🤓 Automating Terramate',
+          collapsed: false,
+          link: '/cli/automation/index',
+          items: [
+            { text: 'GitHub Actions', link: '/cli/automation/github-actions' },
+            { text: 'GitLab CI/CD (cooming soon)', link: '/cli/automation/gitlab' },
+            { text: 'BitBucket Pipelines (cooming soon)', link: '/cli/automation/bitbucket' },
+          ],
+        },
 
         {
           text: '👷 Dev Tooling',
