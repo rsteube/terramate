@@ -3,7 +3,7 @@ module github.com/terramate-io/terramate
 go 1.18
 
 require (
-	github.com/alecthomas/kong v0.7.1
+	github.com/alecthomas/kong v0.8.0
 	github.com/apparentlymart/go-versions v1.0.1
 	github.com/cli/go-gh/v2 v2.1.0
 	github.com/cli/safeexec v1.0.0
@@ -24,6 +24,7 @@ require (
 	github.com/madlambda/spells v0.4.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/posener/complete v1.2.3
+	github.com/rsteube/carapace-spec-kong v0.0.3
 	github.com/terramate-io/go-checkpoint v1.0.0
 	github.com/willabides/kongplete v0.2.0
 	github.com/zclconf/go-cty v1.13.2
@@ -46,6 +47,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/rsteube/carapace-spec v0.10.2 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/segmentio/encoding v0.3.4 // indirect
 	go.lsp.dev/pkg v0.0.0-20210717090340-384b27a52fb2 // indirect

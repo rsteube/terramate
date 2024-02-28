@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	hhcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	spec "github.com/rsteube/carapace-spec-kong"
 	"github.com/terramate-io/go-checkpoint"
 	"github.com/terramate-io/terramate/cloud"
 	cloudstack "github.com/terramate-io/terramate/cloud/stack"
@@ -257,6 +258,7 @@ type cliSpec struct {
 			} `cmd:"" help:"manage cloud drifts"`
 		} `cmd:"" hidden:"" help:"Terramate Cloud commands"`
 	} `cmd:"" help:"Experimental features (may change or be removed in the future)"`
+	kong.Plugins
 }
 
 type runSafeguardsCliSpec struct {
@@ -343,6 +345,7 @@ func newCLI(version string, args []string, stdin io.Reader, stdout, stderr io.Wr
 	kongExitStatus := 0
 
 	parsedArgs := cliSpec{}
+	parsedArgs.Plugins = kong.Plugins{&spec.Plugin{}}
 	parser, err := kong.New(&parsedArgs,
 		kong.Name("terramate"),
 		kong.Description("A tool for managing terraform stacks"),
@@ -367,6 +370,7 @@ func newCLI(version string, args []string, stdin io.Reader, stdout, stderr io.Wr
 	)
 
 	ctx, err := parser.Parse(args)
+	ctx.Run()
 
 	if kongExit && kongExitStatus == 0 {
 		return &cli{exit: true}
@@ -677,7 +681,8 @@ func (c *cli) run() {
 		c.setupSafeguards(c.parsedArgs.Script.Run.runSafeguardsCliSpec)
 		c.runScript()
 	default:
-		log.Fatal().Msg("unexpected command sequence")
+		println(c.ctx.Command())
+		// log.Fatal().Msg("unexpected command sequence")
 	}
 }
 

@@ -1,0 +1,191 @@
+name: terramate
+description: A tool for managing terraform stacks
+flags:
+    --disable-check-git-uncommitted: Disable git check for uncommitted files
+    --disable-check-git-untracked: Disable git check for untracked files
+    --disable-checkpoint: Disable checkpoint checks for updates
+    --disable-checkpoint-signature: Disable checkpoint signature
+    --log-destination=: Destination of log messages
+    --log-fmt=: 'Log format to use: ''console'', ''text'', or ''json'''
+    --log-level=: 'Log level to use: ''disabled'', ''trace'', ''debug'', ''info'', ''warn'', ''error'', or ''fatal'''
+    --no-tags=*: Filter stacks that do not have the given tags
+    --quiet: Disable output
+    --tags=*: 'Filter stacks by tags. Use ":" for logical AND and "," for logical OR. Example: --tags app:prod filters stacks containing tag "app" AND "prod". If multiple --tags are provided, an OR expression is created. Example: "--tags a --tags b" is the same as "--tags a,b"'
+    --version: Terramate version
+    -B, --git-change-base=: Git base ref for computing changes
+    -C, --chdir=: Sets working directory
+    -c, --changed: Filter by changed infrastructure
+    -h, --help: Show context-sensitive help.
+    -v, --verbose=*: Increase verboseness of output
+completion:
+    flag:
+        log-destination:
+            - stderr
+            - stdout
+        log-fmt:
+            - console
+            - text
+            - json
+        log-level:
+            - disabled
+            - trace
+            - debug
+            - info
+            - warn
+            - error
+            - fatal
+commands:
+    - name: version
+      description: Terramate version
+    - name: create
+      description: Creates a stack on the project
+      flags:
+        --after=*: Add a stack as after
+        --all-terraform: initialize all Terraform directories containing terraform.backend blocks defined
+        --before=*: Add a stack as before
+        --description=: Description of the stack, defaults to the stack name
+        --ensure-stack-ids: generate an UUID for the stack.id of all stacks which does not define it
+        --id=: ID of the stack, defaults to UUID
+        --ignore-existing: If the stack already exists do nothing and don't fail
+        --import=*: Add import block for the given path on the stack
+        --name=: Name of the stack, defaults to stack dir base name
+        --no-generate: Disable code generation for the newly created stacks
+    - name: fmt
+      description: Format all files inside dir recursively
+      flags:
+        --check: Lists unformatted files, exit with 0 if all is formatted, 1 otherwise
+        --detailed-exit-code: Return an appropriate exit code (0 = ok, 1 = error, 2 = no error but changes were made)
+    - name: list
+      description: List stacks
+      flags:
+        --cloud-status=: Filter by status
+        --experimental-status=: Filter by status (Deprecated)
+        --run-order: Sort stacks by order of execution
+        --why: Shows the reason why the stack has changed
+    - name: run
+      description: Run command in the stacks
+      flags:
+        --cloud-sync-deployment: Enable synchronization of stack execution with the Terramate Cloud
+        --cloud-sync-drift-status: Enable drift detection and synchronization with the Terramate Cloud
+        --cloud-sync-terraform-plan-file=: Enable sync of Terraform plan file
+        --continue-on-error: Continue executing in other stacks in case of error
+        --disable-check-gen-code: Disable outdated generated code check
+        --disable-check-git-remote: Disable checking if local default branch is updated with remote
+        --disable-safeguards=: 'Disable safeguards: {all,none,git,git-untracked,git-uncommitted,outdated-code,git-out-of-sync}'
+        --dry-run: Plan the execution but do not execute it
+        --eval: Evaluate command line arguments as HCL strings
+        --no-recursive: Do not recurse into child stacks
+        --reverse: Reverse the order of execution
+        -X: Disable all safeguards
+      completion:
+        flag:
+            disable-safeguards:
+                - git
+                - all
+                - none
+                - git-untracked
+                - git-uncommitted
+                - outdated-code
+                - git-out-of-sync
+    - name: generate
+      description: Generate terraform code for stacks
+      flags:
+        --detailed-exit-code: Return detailed exit code (0 = ok, 1 = errors, 2 = no errors but changes were made
+    - name: script
+      description: Terramate Script commands
+      commands:
+        - name: list
+          description: Show a list of all scripts in the current directory
+        - name: tree
+          description: Show a tree of all scripts in the current directory
+        - name: info
+          description: Show detailed information about a script
+        - name: run
+          description: Run script in stacks
+          flags:
+            --disable-check-gen-code: Disable outdated generated code check
+            --disable-check-git-remote: Disable checking if local default branch is updated with remote
+            --disable-safeguards=: 'Disable safeguards: {all,none,git,git-untracked,git-uncommitted,outdated-code,git-out-of-sync}'
+            --dry-run: Plan the execution but do not execute it
+            --no-recursive: Do not recurse into child stacks
+            -X: Disable all safeguards
+          completion:
+            flag:
+                disable-safeguards:
+                    - git
+                    - all
+                    - none
+                    - git-untracked
+                    - git-uncommitted
+                    - outdated-code
+                    - git-out-of-sync
+    - name: install-completions
+      description: Install shell completions
+      flags:
+        --uninstall: ""
+    - name: debug
+      description: Terramate debugging commands
+      commands:
+        - name: show
+          description: Show information available in the project
+          commands:
+            - name: metadata
+              description: Shows metadata available on the project
+            - name: globals
+              description: List globals for all stacks
+            - name: generate-origins
+              description: Show generate debug information
+            - name: runtime-env
+              description: List run environment variables for all stacks
+    - name: cloud
+      description: Terramate Cloud commands
+      commands:
+        - name: login
+          description: login for cloud.terramate.io
+        - name: info
+          description: cloud information status
+        - name: drift
+          description: manage cloud drifts
+          commands:
+            - name: show
+              description: show drifts
+    - name: experimental
+      description: Experimental features (may change or be removed in the future)
+      commands:
+        - name: clone
+          description: Clones a stack
+          flags:
+            --skip-child-stacks: Clone ignores child stacks
+        - name: trigger
+          description: Triggers a stack
+          flags:
+            --cloud-status=: Filter by status
+            --experimental-status=: Filter by status (Deprecated)
+            --reason=: Reason for the stack being triggered
+        - name: run-graph
+          description: Generate a graph of the execution order
+          flags:
+            -l, --label=: Label used in graph nodes (it could be either "stack.name" or "stack.dir"
+            -o, --outfile=: Output .dot file
+        - name: vendor
+          description: Manages vendored Terraform modules
+          commands:
+            - name: download
+              description: Downloads a Terraform module and stores it on the project vendor dir
+              flags:
+                -d, --dir=: dir to vendor downloaded project
+        - name: eval
+          description: Eval expression
+          flags:
+            --as-json: Outputs the result as a JSON value
+            -g, --global=*: 'set/override globals. eg.: --global name=<expr>'
+        - name: partial-eval
+          description: Partial evaluate the expressions
+          flags:
+            -g, --global=*: 'set/override globals. eg.: --global name=<expr>'
+        - name: get-config-value
+          description: Get configuration value
+          flags:
+            --as-json: Outputs the result as a JSON value
+            -g, --global=*: 'set/override globals. eg.: --global name=<expr>'
+
